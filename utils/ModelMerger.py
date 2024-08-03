@@ -12,6 +12,7 @@ class MergeElement:
 class ModelMergerRequest:
     command: str
     files: list[MergeElement]
+    mergedName: str
 
 
 class ModelMerger(Protocol):
