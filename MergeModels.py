@@ -6,6 +6,14 @@ from tkinter import messagebox
 import torch
 from utils.ModelMerger import ModelMergerRequest
 
+def convert_to_number(s):
+    if isinstance(s, str):
+        s = s.lower().replace(' ', '')
+        if s.endswith('k'):
+            return int(float(s[:-1]) * 1000)
+        elif s.endswith('m'):
+            return int(float(s[:-1]) * 1000000)
+    return int(s)
 
 def merge_model(request: ModelMergerRequest):
     global state_dict
@@ -55,7 +63,7 @@ def merge_model(request: ModelMergerRequest):
             merge_model_sample_rate = model_sample_rate
 
         # If we hit this, the user didn't provide all the same sample rate models
-        if model_sample_rate != merge_model_sample_rate:
+        if convert_to_number(model_sample_rate) != convert_to_number(merge_model_sample_rate):
             messagebox.showinfo("Error", f"Please ensure all models are the same sample rate!\n "
                                          f"First model in set was {merge_model_sample_rate} but then "
                                          f"received {model_sample_rate}")
