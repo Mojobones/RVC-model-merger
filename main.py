@@ -61,8 +61,22 @@ def add_row():
     browse_button = tk.Button(frame, text='Browse', command=lambda: select_file(entry))
     browse_button.pack(side='left', padx=5)
 
-    slider = tk.Scale(frame, from_=1, to=100, orient='horizontal')
+    slider = tk.Scale(frame, from_=1, to=100, orient='horizontal', label='Strength', showvalue=False)
     slider.pack(side='left', padx=5)
+
+    slider_label = tk.Label(frame, text=str(slider.get()))
+    slider_label.pack(side='left', padx=5)
+
+    def update_label(value):
+        slider_label.config(text=str(value))
+
+    def on_label_click(event):
+        input_value = tk.simpledialog.askinteger("Input", "Enter a value:", minvalue=1, maxvalue=100)
+        if input_value is not None:
+            slider.set(input_value)
+
+    slider_label.bind("<Button-1>", on_label_click)
+    slider.config(command=update_label)
 
     button = tk.Button(frame, text='Delete', command=lambda: delete_row(frame))
     button.pack(side='right', padx=5, pady=5)
