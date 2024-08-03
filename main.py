@@ -44,8 +44,10 @@ def merge_models():
     # create merge request and send it
     request = ModelMergerRequest(command="merge", files=files, mergedName=merged_name)
     rvc_merger = RVCModelMerger()
-    rvc_merger.merge_models(request)
-    messagebox.showinfo("Success", f"Merged model saved as {merged_name}")
+    model, success = rvc_merger.merge_models(request)
+
+    if success:
+        messagebox.showinfo("Success", f"Merged model saved as {merged_name}")
 
 
 def add_row():
@@ -61,7 +63,11 @@ def add_row():
     browse_button = tk.Button(frame, text='Browse', command=lambda: select_file(entry))
     browse_button.pack(side='left', padx=5)
 
-    slider = tk.Scale(frame, from_=1, to=100, orient='horizontal', label='Strength', showvalue=False)
+    slider = tk.Scale(frame,
+                      from_=1, to=100,
+                      orient='horizontal',
+                      label='Strength',
+                      showvalue=False)
     slider.pack(side='left', padx=5)
 
     slider_label = tk.Label(frame, text=str(slider.get()))
