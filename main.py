@@ -54,6 +54,9 @@ def add_row():
     """Adds a row to the main window
     Adds a row to the main window with entry controls for a model to merge
     """
+
+    global model_rows
+
     frame = tk.Frame(root)
     frame.pack(fill='x', padx=5, pady=5)
 
@@ -92,16 +95,19 @@ def add_row():
 
 def delete_row(frame):
     global model_rows
-    for row in model_rows:
-        if row[0] == frame:
-            model_rows.remove(row)
-            break
-    for widget in frame.winfo_children():
-        widget.destroy()
-    frame.pack_forget()
 
-    # Update the layout and resize the window
-    root.update_idletasks()
+    # Restrict deletion so at least 2 models are guaranteed provided
+    if len(model_rows) != 2:
+        for row in model_rows:
+            if row[0] == frame:
+                model_rows.remove(row)
+                break
+        for widget in frame.winfo_children():
+            widget.destroy()
+        frame.pack_forget()
+
+        # Update the layout and resize the window
+        root.update_idletasks()
 
 
 # Create a separate frame for the "Merge Models" button
