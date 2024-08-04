@@ -13,8 +13,10 @@ model_rows = []
 
 def select_file(entry):
     filepath = filedialog.askopenfilename(filetypes=[("PyTorch model", "*.pth")])
-    entry.delete(0, "end")
-    entry.insert(0, filepath)
+
+    if filepath != '':
+        entry.delete(0, "end")
+        entry.insert(0, filepath)
 
 
 def merge_models():
