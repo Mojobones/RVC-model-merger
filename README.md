@@ -4,7 +4,7 @@ Much of this code was taken from [W-Okada's Voice Changer](https://github.com/w-
 
 Usage: 
 1. Install requirements with 'pip install -r requirements.txt' 
-2. Run the program with 'python main.py'
+2. Run the program with the 'run.bat' file, or manually by opening a command window in the folder and typing 'python main.py'
 3. Add as many rows as desired to merge by using the 'Add Merge Slot' button, and use the 'Browse' button to select the models to merge
    * **NOTE**: They must be of the same RVC version (v1, v2, etc.) and the same sample rate (all 32k, 40k, 48k)
 4. Use the slider to determine what the strength of that model in the merge will be from 1 to 100
