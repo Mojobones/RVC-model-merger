@@ -1,6 +1,6 @@
 This is a program that can merge multiple RVC models together
 
-Much of this code was taken from [W-Okada's Voice Changer](https://github.com/w-okada/voice-changer) 
+<img width="1278" height="502" alt="model-merger" src="https://github.com/user-attachments/assets/bf67070b-dee7-4bea-911c-db01cf68476f" />
 
 Usage: 
 1. Install requirements with 'pip install -r requirements.txt' 
