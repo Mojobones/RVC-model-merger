@@ -3,6 +3,10 @@ This is a program that can merge multiple RVC models together
 <img width="1278" height="502" alt="model-merger" src="https://github.com/user-attachments/assets/bf67070b-dee7-4bea-911c-db01cf68476f" />
 
 Usage: 
+**Compiled Version**
+Unzip and run the merger's exe
+
+**Non-Compiled Version**
 1. Install requirements with 'pip install -r requirements.txt' 
 2. Run the program with the 'run.bat' file, or manually by opening a command window in the folder and typing 'python main.py'
 3. Add as many rows as desired to merge by using the 'Add Merge Slot' button, and use the 'Browse' button to select the models to merge
