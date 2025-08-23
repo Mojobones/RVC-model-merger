@@ -2,8 +2,10 @@ This is a program that can merge multiple RVC models together
 
 <img width="1278" height="502" alt="model-merger" src="https://github.com/user-attachments/assets/bf67070b-dee7-4bea-911c-db01cf68476f" />
 
-Usage: 
+<h1>Usage:</h1> 
+
 **Compiled Version**
+
 Unzip and run the merger's exe
 
 **Non-Compiled Version**
