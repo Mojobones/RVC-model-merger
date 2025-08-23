@@ -3,6 +3,9 @@ This is a program that can merge multiple RVC models together
 <img width="1278" height="502" alt="model-merger" src="https://github.com/user-attachments/assets/bf67070b-dee7-4bea-911c-db01cf68476f" />
 
 <h1>Usage:</h1> 
+All merges will give a printout about the name it was saved at, which will be placed in the 'merges/' folder
+
+If there's an error (ex. mismatch of sample rate, version, etc.) a warning will be given in the terminal window
 
 **Compiled Version**
 
