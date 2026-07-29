@@ -1,2 +1,5 @@
-torch==2.0.1
-numpy==1.23.5
+torch==2.10.0
+numpy==1.26.4
+# Optional: enables drag-and-drop of .pth files onto slots.
+# The app runs fine without it, just without drag-and-drop.
+tkinterdnd2==0.6.2
