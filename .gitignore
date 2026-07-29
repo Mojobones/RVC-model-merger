@@ -11,3 +11,4 @@ build/
 dist/
 .buildenv/
 *.zip
+/dist_build

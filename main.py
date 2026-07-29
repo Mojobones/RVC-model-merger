@@ -42,12 +42,52 @@ FONT_TITLE = ("Segoe UI", 13, "bold")
 def normalized_sr(value):
     """
     Sample rate is stored inconsistently across checkpoints - 32000, '32000' and
-    '32k' all occur in the wild - so normalise before displaying or comparing.
+    '32k' all occur in the wild. so normalise before displaying or comparing.
     """
     try:
         return convert_to_number(value)
     except (TypeError, ValueError):
         return None
+
+
+def show_success(root, message, folder):
+    """
+    Confirmation with OK as the primary action.
+    """
+    win = tk.Toplevel(root)
+    win.title("Merge complete")
+    win.configure(bg=BG)
+    win.resizable(False, False)
+    win.transient(root)
+
+    tk.Label(win, text=message, bg=BG, fg=TEXT, font=FONT,
+             justify="left", wraplength=380).pack(padx=20, pady=(18, 14))
+
+    buttons = tk.Frame(win, bg=BG)
+    buttons.pack(padx=20, pady=(0, 16), fill="x")
+
+    def dismiss():
+        win.grab_release()
+        win.destroy()
+
+    ttk.Button(buttons, text="Open merges folder",
+               command=lambda: open_in_file_manager(folder)).pack(side="left")
+    ok = ttk.Button(buttons, text="OK", style="Accent.TButton", command=dismiss)
+    ok.pack(side="right")
+
+    win.bind("<Return>", lambda e: dismiss())
+    win.bind("<Escape>", lambda e: dismiss())
+    win.protocol("WM_DELETE_WINDOW", dismiss)
+
+    # Centre on the parent window.
+    win.update_idletasks()
+    x = root.winfo_rootx() + (root.winfo_width() - win.winfo_width()) // 2
+    y = root.winfo_rooty() + (root.winfo_height() - win.winfo_height()) // 3
+    win.geometry(f"+{max(0, x)}+{max(0, y)}")
+
+    win.grab_set()
+    ok.focus_set()
+    root.wait_window(win)
 
 
 def open_in_file_manager(path):
@@ -240,6 +280,7 @@ class MergerApp:
         self.presets = {}
         self.name_var = tk.StringVar()
         self.preset_var = tk.StringVar()
+        self.encoder_only = tk.BooleanVar(value=False)
         self._name_manual = False   # user typed their own name; stop auto-filling
         self._setting_name = False  # guard so programmatic writes aren't seen as edits
 
@@ -355,6 +396,12 @@ class MergerApp:
         self.merge_btn = ttk.Button(footer, text="Merge Models",
                                     style="Accent.TButton", command=self.merge_models)
         self.merge_btn.pack(side="right")
+
+        self.encoder_check = tk.Checkbutton(
+            footer, text="Blend encoder only", variable=self.encoder_only,
+            command=self.update_status, bg=BG, fg=TEXT, font=FONT,
+            activebackground=BG, selectcolor=CARD, bd=0, highlightthickness=0)
+        self.encoder_check.pack(side="right", padx=10)
 
         self.status = tk.Label(footer, text="", bg=BG, fg=MUTED, font=FONT, anchor="w")
         self.status.pack(side="left", padx=14, fill="x", expand=True)
@@ -603,13 +650,31 @@ class MergerApp:
 
         archs = {r.arch for r in active} - {"unknown"}
         rates = {normalized_sr(r.info["sr"]) for r in active} - {None}
+        versions = {str(r.info["version"]) for r in active if r.info["version"]}
+        partial = self.encoder_only.get()
+
         if len(archs) > 1:
             self.set_status("Mixed vocoders selected — these models cannot be merged.")
-        elif len(rates) > 1:
-            rate_list = ", ".join(f"{s // 1000}k" for s in sorted(rates))
-            self.set_status(f"Mixed sample rates ({rate_list}) — these models cannot be merged.")
+        elif len(versions) > 1:
+            self.set_status(f"Mixed RVC versions ({', '.join(sorted(versions))}) "
+                            "— these models cannot be merged.")
         elif len(entries) < 2:
             self.set_status("Select at least 2 models with a strength above 0.")
+        elif len(rates) > 1 and not partial:
+            rate_list = ", ".join(f"{s // 1000}k" for s in sorted(rates))
+            self.set_status(f"Mixed sample rates ({rate_list}) — tick 'Blend encoder only' to "
+                            f"combine them, with the {min(rates) // 1000}k model in slot 1.")
+        elif partial:
+            base_rate = normalized_sr(active[0].info["sr"]) if active else None
+            rate = f"{base_rate // 1000}k" if base_rate else "?"
+            # Blending disturbs the base model's latents proportionally more at higher
+            # rates, so the lowest-rate model makes the most forgiving base.
+            if rates and base_rate and base_rate > min(rates):
+                self.set_status(f"Partial blend — output {rate}. Tip: move the "
+                                f"{min(rates) // 1000}k model to slot 1 for better results.")
+            else:
+                self.set_status(f"Partial blend — slot 1 supplies the decoder, output is {rate}. "
+                                "Only the encoder is mixed.")
         else:
             vocoder = self.merged_vocoder()
             self.set_status(f"{len(entries)} models" + (f"  ·  {vocoder}" if vocoder else ""))
@@ -642,6 +707,22 @@ class MergerApp:
             messagebox.showinfo("Error", "Please provide 2 or more models with a strength above 0.")
             return
 
+        active = self.active_rows()
+        rates = {normalized_sr(r.info["sr"]) for r in active} - {None}
+        if len(rates) > 1 and not self.encoder_only.get():
+            rate_list = ", ".join(f"{s // 1000}k" for s in sorted(rates))
+            messagebox.showinfo(
+                "Mixed sample rates",
+                f"These models use different sample rates ({rate_list}), so their "
+                "decoders cannot be blended.\n\n"
+                "Tick 'Blend encoder only' to combine them anyway. That mixes only the "
+                "sample-rate-independent part of the network and takes the decoder "
+                "(and the output sample rate) from slot 1.\n\n"
+                f"For the best results put the lowest sample rate ({min(rates) // 1000}k) "
+                "in slot 1 — a higher-rate base is disturbed more by the blend and tends "
+                "to sound degraded.")
+            return
+
         merged_name = self.output_name()
         if not merged_name:
             messagebox.showinfo("Error", "Please enter a name for the merged model.")
@@ -660,14 +741,14 @@ class MergerApp:
         self.set_status("Merging…")
         self.root.update_idletasks()
         try:
-            request = ModelMergerRequest(command="merge", files=files, mergedName=merged_name)
+            request = ModelMergerRequest(command="merge", files=files, mergedName=merged_name,
+                                         encoderOnly=self.encoder_only.get())
             _, success = RVCModelMerger().merge_models(request)
             if success:
                 self.set_status(f"Saved  {OUTPUT_DIR}\\{merged_name}.pth")
-                if messagebox.askyesno("Success",
-                                       f"Merged model saved as {merged_name}.pth\n\n"
-                                       f"Open the {OUTPUT_DIR} folder?"):
-                    open_in_file_manager(OUTPUT_DIR)
+                show_success(self.root,
+                             f"Merged model saved as\n{OUTPUT_DIR}\\{merged_name}.pth",
+                             OUTPUT_DIR)
             else:
                 self.set_status("Merge failed — see the error above.")
         except Exception as exc:  # keep the window alive instead of dying to a traceback
