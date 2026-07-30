@@ -143,9 +143,12 @@ def probe_checkpoint(path: str) -> Dict[str, Any]:
 
     if data is None:
         try:
-            data = torch.load(path, map_location="cpu")
+            data = torch.load(path, map_location="cpu", weights_only=True)
         except Exception:
-            return dict(EMPTY_PROBE)
+            try:  # legacy checkpoint with something outside the safe unpickler's allowlist
+                data = torch.load(path, map_location="cpu", weights_only=False)
+            except Exception:
+                return dict(EMPTY_PROBE)
 
     if not isinstance(data, dict):
         return dict(EMPTY_PROBE)
@@ -252,7 +255,12 @@ def merge_model(request: ModelMergerRequest):
 
     def load_weight(path: str):
         print(f"Loading {path}...")
-        loc_state_dict = torch.load(path, map_location="cpu")
+        try:
+            loc_state_dict = torch.load(path, map_location="cpu", weights_only=True)
+        except Exception:
+            # Legacy checkpoint containing something outside the safe unpickler's
+            # allowlist (rare - every file in normal use loads fine above).
+            loc_state_dict = torch.load(path, map_location="cpu", weights_only=False)
         if "model" in loc_state_dict:
             loc_weight = extract(loc_state_dict)
         else:
