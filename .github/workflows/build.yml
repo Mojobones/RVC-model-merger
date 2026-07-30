@@ -11,6 +11,11 @@ on:
 
 jobs:
   build:
+    # Needed for softprops/action-gh-release to upload assets to the release -
+    # without this the default GITHUB_TOKEN is read-only on some repos/orgs and
+    # the upload fails with "Resource not accessible by integration".
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
